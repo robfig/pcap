@@ -95,6 +95,18 @@ func (p *Pcap) SetPromisc(promisc bool) error {
 	return nil
 }
 
+func (p *Pcap) SetMonitor(monitor bool) error {
+	var mon int32
+	if monitor {
+		mon = 1
+	}
+
+	if C.pcap_set_rfmon(p.cptr, C.int(mon)) != 0 {
+		return p.Geterror()
+	}
+	return nil
+}
+
 func (p *Pcap) SetSnapLen(s int32) error {
 	if C.pcap_set_snaplen(p.cptr, C.int(s)) != 0 {
 		return p.Geterror()
