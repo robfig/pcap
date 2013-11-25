@@ -95,7 +95,6 @@ func Parse(packet []byte) (*Header, error) {
 		if (hdr.Present>>uint(i-1))&1 == 0 {
 			continue
 		}
-
 		field := hdrval.Field(i)
 
 		// Handle padding -- fields must be aligned to a multiple of their size.
