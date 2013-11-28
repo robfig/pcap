@@ -1,7 +1,6 @@
 package ieee80211
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 
@@ -107,10 +106,9 @@ func Parse(packet []byte) (pframe *Frame, err error) {
 		return nil, errors.New("invalid frame: too short")
 	}
 
-	var frame Frame
-	if !read(&err, packet[:2], &frame.FrameControl) ||
-		!read(&err, packet[2:4], &frame.DurationID) {
-		return
+	var frame = Frame{
+		FrameControl: FrameControl(binary.LittleEndian.Uint16(packet[:2])),
+		DurationID:   binary.LittleEndian.Uint16(packet[2:4]),
 	}
 
 	var pos = 4
@@ -120,9 +118,7 @@ func Parse(packet []byte) (pframe *Frame, err error) {
 		frame.Addr1 = net.HardwareAddr(packet[4:10])
 		frame.Addr2 = net.HardwareAddr(packet[10:16])
 		frame.Addr3 = net.HardwareAddr(packet[16:22])
-		if !read(&err, packet[22:24], &frame.SequenceControl) {
-			return
-		}
+		frame.SequenceControl = binary.LittleEndian.Uint16(packet[22:24])
 		pos = 24
 
 	case Type_Control:
@@ -146,9 +142,7 @@ func Parse(packet []byte) (pframe *Frame, err error) {
 
 	// QoS present for data packets, subtype >= QosData
 	if frame.FrameControl&FC_Type == Type_Data && frame.FrameControl&FC_Subtype >= Subtype_QosData {
-		if !read(&err, packet[pos:pos+2], &frame.QoS) {
-			return
-		}
+		frame.QoS = binary.LittleEndian.Uint16(packet[pos : pos+2])
 		pos += 2
 	}
 
@@ -159,9 +153,7 @@ func Parse(packet []byte) (pframe *Frame, err error) {
 		return &frame, nil
 	}
 	frame.Body = packet[pos:fcsStart]
-	if !read(&err, packet[fcsStart:], &frame.FCS) {
-		return
-	}
+	frame.FCS = binary.LittleEndian.Uint32(packet[fcsStart:])
 
 	return &frame, nil
 }
@@ -185,9 +177,4 @@ func (h *Frame) Dest() net.HardwareAddr {
 		return h.Addr1
 	}
 	return h.Addr3
-}
-
-func read(err *error, in []byte, out interface{}) bool {
-	*err = binary.Read(bytes.NewReader(in), binary.LittleEndian, out)
-	return *err == nil
 }

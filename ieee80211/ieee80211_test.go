@@ -73,13 +73,14 @@ func TestIEEE80211_ACK2(t *testing.T) {
 	}
 }
 
+var beacon = []byte{
+	0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x28, 0xcf, 0xda, 0xb2,
+	0x16, 0xd0, 0x28, 0xcf, 0xda, 0xb2, 0x16, 0xd0, 0xf0, 0x90,
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // dummy body bytes
+	0x8c, 0x39, 0x8d, 0x11,
+}
+
 func TestIEEE80211_Beacon(t *testing.T) {
-	var b = []byte{
-		0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x28, 0xcf, 0xda, 0xb2,
-		0x16, 0xd0, 0x28, 0xcf, 0xda, 0xb2, 0x16, 0xd0, 0xf0, 0x90,
-		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // dummy body bytes
-		0x8c, 0x39, 0x8d, 0x11,
-	}
 	var expected = &Frame{
 		FrameControl:    0x0080,
 		DurationID:      0,
@@ -91,7 +92,7 @@ func TestIEEE80211_Beacon(t *testing.T) {
 		FCS:             0x118d398c,
 	}
 
-	actual, err := Parse(b)
+	actual, err := Parse(beacon)
 	if err != nil {
 		t.Error(err)
 		return
@@ -118,6 +119,16 @@ func TestIEEE80211_Beacon(t *testing.T) {
 
 	if len(actual.Body) != 10 {
 		t.Error("Incorrect body, len", len(actual.Body))
+	}
+}
+
+func Benchmark_Beacon(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := Parse(beacon)
+		if err != nil {
+			b.Error(err)
+			return
+		}
 	}
 }
 
