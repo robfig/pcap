@@ -7,7 +7,37 @@ import (
 
 // TODO: Find packets with QoS / Addr4
 
-func TestIEEE80211_Ack(t *testing.T) {
+func TestIEEE80211_PSPoll(t *testing.T) {
+	var b = []byte{
+		0xa4, 0x10, 0xb, 0xc0, 192, 138, 222, 163, 244, 104, 248, 143, 202, 36, 92, 99,
+	}
+	var expected = &Frame{
+		FrameControl: 0x10a4,
+		DurationID:   0xc00b,
+		Addr1:        []byte{0xc0, 0x8a, 0xde, 0xa3, 0xf4, 0x68},
+		Addr2:        []byte{0xf8, 0x8f, 0xca, 0x24, 0x5c, 0x63},
+		Body:         []byte{},
+		FCS:          0,
+	}
+
+	compare(t, expected, b, Type_Control, Subtype_PSPoll)
+}
+
+func TestIEEE80211_ACK(t *testing.T) {
+	var b = []byte{
+		212, 0, 0, 0, 248, 143, 202, 36, 92, 9,
+	}
+	var expected = &Frame{
+		FrameControl: 0x00d4,
+		DurationID:   0,
+		Addr1:        []byte{0xf8, 0x8f, 0xca, 0x24, 0x5c, 0x09},
+		Body:         []byte{},
+		FCS:          0,
+	}
+	compare(t, expected, b, Type_Control, Subtype_ACK)
+}
+
+func TestIEEE80211_ACK2(t *testing.T) {
 	var b = []byte{
 		0xd4, 0, 0, 0, 0xb8, 0xe8, 0x56, 0x2d, 0xb9, 0x36, 0xe6, 0x5f, 0x03, 0x7f,
 	}
@@ -88,5 +118,22 @@ func TestIEEE80211_Beacon(t *testing.T) {
 
 	if len(actual.Body) != 10 {
 		t.Error("Incorrect body, len", len(actual.Body))
+	}
+}
+
+func compare(t *testing.T, expected *Frame, actualBytes []byte, frametype, subtype uint8) {
+	actual, err := Parse(actualBytes)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Bad header:\n%v (expected)\n%v (actual)", expected, actual)
+	}
+	if actual.FrameControl.Type() != frametype {
+		t.Errorf("Expected type %x, got %b", frametype, actual.FrameControl.Type())
+	}
+	if actual.FrameControl.Subtype() != subtype {
+		t.Errorf("Expected %x, got %b", subtype, actual.FrameControl.Subtype())
 	}
 }

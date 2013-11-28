@@ -19,8 +19,8 @@ const (
 	FC_Retry    = 0x0800
 	FC_PwrMgmt  = 0x1000
 	FC_MoreData = 0x2000
-	FC_WEB      = 0x4000
-	FC_Rsvd     = 0x8000
+	FC_WEP      = 0x4000
+	FC_Order    = 0x8000
 
 	// Frame types
 	Type_Management = 0x0
@@ -99,8 +99,8 @@ type Frame struct {
 }
 
 // Control ACK is the smallest legitimate packet:
-// FrameControl, DurationID, Addr1, FCS
-const MinPacketSize = 14
+// FrameControl, DurationID, Addr1
+const MinPacketSize = 10
 
 func Parse(packet []byte) (pframe *Frame, err error) {
 	if len(packet) < MinPacketSize {
@@ -154,8 +154,9 @@ func Parse(packet []byte) (pframe *Frame, err error) {
 
 	var fcsStart = len(packet) - 4
 	if fcsStart < pos {
-		// TODO: This can probably happen if we don't capture the entire packet.
-		return nil, errors.New("FCS not found")
+		// FCS not present
+		frame.Body = packet[pos:]
+		return &frame, nil
 	}
 	frame.Body = packet[pos:fcsStart]
 	if !read(&err, packet[fcsStart:], &frame.FCS) {
