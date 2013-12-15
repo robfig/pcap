@@ -96,6 +96,10 @@ func Parse(packet []byte) (*Header, error) {
 			continue
 		}
 		field := hdrval.Field(i)
+		fieldSize := int(field.Type().Size())
+		if fieldSize > data.Len() {
+			break
+		}
 
 		// Handle padding -- fields must be aligned to a multiple of their size.
 		if toAdd := bytesRead % field.Type().FieldAlign(); toAdd != 0 {
@@ -107,7 +111,7 @@ func Parse(packet []byte) (*Header, error) {
 		if err != nil {
 			return nil, err
 		}
-		bytesRead += int(field.Type().Size())
+		bytesRead += fieldSize
 	}
 
 	return hdr, nil
