@@ -178,3 +178,14 @@ func (h *Frame) Dest() net.HardwareAddr {
 	}
 	return h.Addr3
 }
+
+func (h *Frame) Transmitter() net.HardwareAddr {
+	var (
+		toDS   = h.FrameControl&FC_ToDS != 0
+		fromDS = h.FrameControl&FC_FromDS != 0
+	)
+	if !toDS && fromDS {
+		return h.Addr3
+	}
+	return h.Addr2
+}

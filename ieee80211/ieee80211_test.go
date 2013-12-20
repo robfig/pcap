@@ -113,6 +113,10 @@ func TestIEEE80211_Beacon(t *testing.T) {
 		t.Error("Unexpected source addr:", actual.Source())
 	}
 
+	if actual.Transmitter().String() != "28:cf:da:b2:16:d0" {
+		t.Error("Unexpected source addr:", actual.Transmitter())
+	}
+
 	if actual.Dest().String() != "ff:ff:ff:ff:ff:ff" {
 		t.Error("Unexpected dest addr:", actual.Dest())
 	}
